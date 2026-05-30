@@ -12,3 +12,4 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = getDatabase(app);
+window.db = db; // Αυτό το κάνει διαθέσιμο στην κονσόλα για δοκιμή
