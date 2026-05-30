@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { ref, push } from 'firebase/database';
+import { ref, push, onValue } from 'firebase/database';
 
 const PAYERS = ['ΓΙΩΡΓΟΣ', 'ΜΠΑΜΠΗΣ', 'ΚΩΣΤΑΣ', 'ΔΗΜΗΤΡΗΣ', 'ΦΩΦΗ', 'ΜΑΡΙΛΗ', 'ΛΙΤΣΑ', 'ΒΑΣΙΛΙΚΗ'];
 const AVATARS: { [key: string]: string } = {
@@ -16,23 +16,24 @@ const commonStyle = {
 export default function App() {
   const [user, setUser] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [locations, setLocations] = useState<any[]>([]);
   const [placeType, setPlaceType] = useState('🏖️ Παραλία');
   const [placeLink, setPlaceLink] = useState('');
   const [placeComment, setPlaceComment] = useState('');
 
-  const saveLocation = () => {
-    push(ref(db, 'locations'), { 
-        type: placeType, 
-        link: placeLink, 
-        comment: placeComment, 
-        addedBy: user, 
-        date: new Date().toLocaleDateString('el-GR') 
-    }).then(() => {
-        setShowModal(false);
-        alert("Επιτυχής αποθήκευση!");
-    }).catch((err) => {
-        alert("Σφάλμα: " + err.message);
+  // Διαβάζουμε τα δεδομένα σε πραγματικό χρόνο
+  useEffect(() => {
+    const locRef = ref(db, 'locations');
+    onValue(locRef, (snapshot) => {
+      const data = snapshot.val();
+      const loadedLocations = data ? Object.entries(data).map(([id, val]: any) => ({ id, ...val })) : [];
+      setLocations(loadedLocations);
     });
+  }, []);
+
+  const saveLocation = () => {
+    push(ref(db, 'locations'), { type: placeType, link: placeLink, comment: placeComment, addedBy: user, date: new Date().toLocaleDateString('el-GR') });
+    setShowModal(false);
   };
 
   if (!user) return (
@@ -51,14 +52,20 @@ export default function App() {
         <button onClick={() => setUser(null)} style={{...commonStyle.button, background: '#fee2e2', color: '#ef4444'}}>Έξοδος</button>
       </div>
 
-      <div style={{ position: 'relative', height: '500px', borderRadius: '20px', overflow: 'hidden', border: '2px solid #e2e8f0' }}>
+      <div style={{ position: 'relative', height: '300px', borderRadius: '20px', overflow: 'hidden', border: '2px solid #e2e8f0', marginBottom: '20px' }}>
         <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d198462.6105809759!2d25.9688!3d38.3688!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sel!2sgr!4v1620000000000" width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"></iframe>
-        
-        <button 
-          onClick={() => setShowModal(true)} 
-          style={{...commonStyle.button, position: 'absolute', bottom: '20px', right: '20px', background: '#3b82f6', color: 'white', borderRadius: '50%', width: '65px', height: '65px', fontSize: '30px', zIndex: 10 }}
-        >+</button>
+        <button onClick={() => setShowModal(true)} style={{...commonStyle.button, position: 'absolute', bottom: '20px', right: '20px', background: '#3b82f6', color: 'white', borderRadius: '50%', width: '65px', height: '65px', fontSize: '30px', zIndex: 10 }}>+</button>
       </div>
+
+      {/* Λίστα με τις τοποθεσίες */}
+      <h3>Αποθηκευμένα Σημεία ({locations.length})</h3>
+      {locations.map((loc) => (
+        <div key={loc.id} style={{ background: 'white', padding: '15px', borderRadius: '12px', marginBottom: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+          <strong>{loc.type}</strong> - {loc.addedBy}<br />
+          <p style={{ margin: '5px 0', fontSize: '14px' }}>{loc.comment}</p>
+          <a href={loc.link} target="_blank" style={{ fontSize: '12px', color: '#3b82f6' }}>Δες στον χάρτη</a>
+        </div>
+      ))}
 
       {showModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -69,7 +76,6 @@ export default function App() {
             </select>
             <input placeholder="Google Maps Link" value={placeLink} onChange={e => setPlaceLink(e.target.value)} style={commonStyle.input} />
             <textarea placeholder="Σχόλια" value={placeComment} onChange={e => setPlaceComment(e.target.value)} style={{...commonStyle.input, height: '80px'}} />
-            
             <div style={{ display: 'flex', gap: '10px' }}>
               <button onClick={() => setShowModal(false)} style={{...commonStyle.button, flex: 1, background: '#ccc'}}>Άκυρο</button>
               <button onClick={saveLocation} style={{...commonStyle.button, flex: 1, background: '#3b82f6', color: 'white'}}>Αποθήκευση</button>
