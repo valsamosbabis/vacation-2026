@@ -74,27 +74,27 @@ export default function App() {
           <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d101037.26252906161!2d25.9620023!3d38.3607005!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14a01c34a3174245%3A0x400bd2ceb9b66a0!2zzqfPh86xzrzOsc-Bzr_Pjc68z4DOuc6x!5e0!3m2!1sel!2sgr!4v1717000000000" width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"></iframe>
           <button onClick={() => setShowModal(true)} style={{...commonStyle.button, position: 'absolute', bottom: '20px', right: '20px', background: '#3b82f6', color: 'white', borderRadius: '50%', width: '65px', height: '65px', fontSize: '35px' }}>+</button>
           
-          {showModal && (
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', padding: '20px', zIndex: 10, display: 'flex', alignItems: 'center' }}>
-              <div style={{ background: 'white', padding: '20px', borderRadius: '15px', width: '100%' }}>
-                <h3>Νέα Τοποθεσία</h3>
-                <select value={placeType} onChange={e => setPlaceType(e.target.value)} style={commonStyle.input}>
-                  <option>🏖️ Παραλία</option><option>🍴 Εστιατόριο</option><option>📌 Άλλο</option>
-                </select>
-                <input placeholder="Google Maps Link" value={placeLink} onChange={e => setPlaceLink(e.target.value)} style={commonStyle.input} />
-                <textarea placeholder="Σχόλια" value={placeComment} onChange={e => setPlaceComment(e.target.value)} style={{...commonStyle.input, height: '80px'}} />
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={() => setShowModal(false)} style={{...commonStyle.button, flex: 1, background: '#f1f5f9', color: '#000'}}>Άκυρο</button>
-                  <button onClick={() => {
-                    push(ref(db, 'locations'), { type: placeType, link: placeLink, comment: placeComment, addedBy: user, date: new Date().toLocaleDateString('el-GR') });
-                    setShowModal(false);
-                  }} style={{...commonStyle.button, flex: 1, background: '#3b82f6', color: 'white'}}>Αποθήκευση</button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      {showModal && (
+  <div style={{ 
+    position: 'absolute', 
+    top: 0, 
+    left: 0, 
+    width: '100%', 
+    height: '100%', 
+    background: 'rgba(0,0,0,0.7)', 
+    padding: '20px', 
+    zIndex: 9999, // ΠΡΟΣΘΕΣΕ ΑΥΤΟ ΤΟ Z-INDEX
+    display: 'flex', 
+    alignItems: 'center',
+    justifyContent: 'center' // Πρόσθεσα και αυτό για να κεντραριστεί το κουτί
+  }}>
+    <div style={{ background: 'white', padding: '20px', borderRadius: '15px', width: '100%', zIndex: 10000 }}>
+       {/* Το περιεχόμενο του Modal παραμένει ίδιο */}
+       <h3>Νέα Τοποθεσία</h3>
+       {/* ... τα input σου ... */}
+    </div>
+  </div>
+)}
 
       {tab === 'expenses' && (
         <div>
