@@ -97,9 +97,57 @@ export default function App() {
         </div>
       )}
 
-      {/* Tabs Εξόδων και Προγράμματος παραμένουν ως είχαν... */}
-      {tab === 'expenses' && ( /* ... */ )}
-      {tab === 'schedule' && ( /* ... */ )}
-    </div>
-  );
-}
+      {/* TAB: ΕΞΟΔΑ */}
+      {tab === 'expenses' && (
+        <div>
+          <div style={{ background: '#1e293b', color: 'white', padding: '15px', borderRadius: '16px', marginBottom: '15px' }}>
+            <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>📊 ΕΚΚΑΘΑΡΙΣΗ</h3>
+            {CAN_ADD.map(p => {
+              const b = getBalance(p);
+              if (b >= 0) return null;
+              const creditor = CAN_ADD.find(c => getBalance(c) > 0) || "Παρέα";
+              return (
+                <div key={p} style={{ marginBottom: '5px', fontSize: '14px' }}>
+                  {AVATARS[p]} <b>{p}</b> χρωστάει <span style={{ color: '#f87171' }}>{Math.abs(b).toFixed(2)}€</span> στον {creditor}
+                </div>
+              );
+            })}
+          </div>
+
+          {CAN_ADD.includes(user) && (
+            <div style={{ background: '#fff', padding: '15px', borderRadius: '16px', border: '1px solid #e2e8f0', marginBottom: '15px' }}>
+              <input placeholder="Τι πληρώσαμε;" value={desc} onChange={e => setDesc(e.target.value)} style={commonStyle.input} />
+              <input type="number" placeholder="Ποσό (€)" value={amount} onChange={e => setAmount(e.target.value)} style={commonStyle.input} />
+              <button onClick={() => {
+                if(!desc || !amount) return;
+                push(ref(db, 'expenses'), { desc, amount: parseFloat(amount), payer: user, date: new Date().toLocaleDateString('el-GR') });
+                setDesc(''); setAmount('');
+              }} style={{...commonStyle.button, width: '100%', background: '#3b82f6', color: 'white'}}>Καταχώρηση</button>
+            </div>
+          )}
+
+          {expenses.slice().reverse().map(e => (
+            <div key={e.id} style={{ background: 'white', padding: '12px', borderRadius: '12px', marginBottom: '8px', display: 'flex', justifyContent: 'space-between' }}>
+              <div><b>{AVATARS[e.payer]} {e.payer}</b>: {e.desc} ({e.amount.toFixed(2)}€)</div>
+              {e.payer === user && <button onClick={() => remove(ref(db, `expenses/${e.id}`))} style={{background:'none', border:'none', cursor:'pointer'}}>✕</button>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* TAB: ΠΡΟΓΡΑΜΜΑ */}
+      {tab === 'schedule' && (
+        <div>
+          {days.map(day => (
+            <div key={day} style={{ background: 'white', padding: '15px', borderRadius: '15px', marginBottom: '15px' }}>
+              <h3 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>📅 {day}</h3>
+              {['Πρωί', 'Μεσημέρι', 'Βράδυ'].map(slot => (
+                <div key={slot} style={{ marginBottom: '8px' }}>
+                  <label style={{ fontSize: '10px', display: 'block' }}>{slot.toUpperCase()}</label>
+                  <input value={schedule[day]?.[slot] || ''} onChange={(e) => set(ref(db, `schedule/${day.replace(/\//g, '-')}/${slot}`), e.target.value)} style={commonStyle.input} />
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
