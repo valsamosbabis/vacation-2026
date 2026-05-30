@@ -21,7 +21,7 @@ const commonStyle = {
     transition: '0.3s', 
     boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
     backgroundColor: '#333333', // Εδώ ορίζεις το χρώμα του κουμπιού
-    color: '#ffffff'            // Εδώ το χρώμα του κειμένου στο κουμπί
+    color: '#000000'            // Εδώ το χρώμα του κειμένου στο κουμπί
   },
   input: { 
     width: '100%', 
