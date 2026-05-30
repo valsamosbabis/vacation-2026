@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
+// @ts-ignore
 import { ref, push, onValue } from 'firebase/database';
 
 const PAYERS = ['ΓΙΩΡΓΟΣ', 'ΜΠΑΜΠΗΣ', 'ΚΩΣΤΑΣ', 'ΔΗΜΗΤΡΗΣ', 'ΦΩΦΗ', 'ΜΑΡΙΛΗ', 'ΛΙΤΣΑ', 'ΒΑΣΙΛΙΚΗ'];
@@ -22,77 +23,71 @@ export default function App() {
   const [placeComment, setPlaceComment] = useState('');
 
   useEffect(() => {
-    console.log("DEBUG: Ξεκινάει η σύνδεση με το Firebase...");
+    // @ts-ignore
     const locRef = ref(db, 'locations');
-    
-    const unsubscribe = onValue(locRef, (snapshot) => {
+    // @ts-ignore
+    const unsubscribe = onValue(locRef, (snapshot: any) => {
       const data = snapshot.val();
-      console.log("DEBUG: Δεδομένα από Firebase:", data);
-      
-      if (!data) {
-        console.log("DEBUG: Η βάση είναι άδεια ή το path 'locations' δεν υπάρχει.");
-        setLocations([]);
-        return;
-      }
-
-      const loadedLocations = Object.entries(data).map(([id, val]: any) => ({ id, ...val }));
-      console.log("DEBUG: Επεξεργασμένα δεδομένα:", loadedLocations);
+      const loadedLocations = data ? Object.entries(data).map(([id, val]: any) => ({ id, ...val })) : [];
       setLocations(loadedLocations);
-    }, (error) => {
-      console.error("DEBUG: Σφάλμα ανάγνωσης από Firebase:", error);
     });
-
     return () => unsubscribe();
   }, []);
 
   const saveLocation = () => {
-    console.log("DEBUG: Προσπάθεια αποθήκευσης στο 'locations'...");
+    // @ts-ignore
     push(ref(db, 'locations'), { 
-        type: placeType, 
-        link: placeLink, 
-        comment: placeComment, 
-        addedBy: user, 
-        date: new Date().toLocaleDateString('el-GR') 
+        type: placeType, link: placeLink, comment: placeComment, addedBy: user, date: new Date().toLocaleDateString('el-GR') 
     }).then(() => {
-        console.log("DEBUG: Επιτυχής αποθήκευση!");
         setShowModal(false);
-    }).catch((err) => {
-        console.error("DEBUG: Σφάλμα κατά την αποθήκευση:", err);
-        alert("Σφάλμα: " + err.message);
-    });
+        setPlaceLink('');
+        setPlaceComment('');
+    }).catch((err: any) => alert("Σφάλμα: " + err.message));
   };
 
   if (!user) return (
-    <div style={{ padding: '20px', fontFamily: 'system-ui' }}>
-      <h1>Επίλεξε Χρήστη:</h1>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-        {PAYERS.map(p => <button key={p} onClick={() => setUser(p)} style={commonStyle.button}>{AVATARS[p]} {p}</button>)}
+    <div style={{ textAlign: 'center', padding: '50px 20px', background: '#f1f5f9', minHeight: '100vh', fontFamily: 'system-ui' }}>
+      <h1>🚢 ΧΙΟΣ 2026</h1>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', maxWidth: '400px', margin: 'auto' }}>
+        {PAYERS.map(p => <button key={p} onClick={() => setUser(p)} style={{...commonStyle.button, background: '#fff'}}>{AVATARS[p]} {p}</button>)}
       </div>
     </div>
   );
 
   return (
     <div style={{ maxWidth: '500px', margin: 'auto', padding: '15px', fontFamily: 'system-ui' }}>
-      <h2>{AVATARS[user]} {user}</h2>
-      
-      <div style={{ position: 'relative', height: '200px', background: '#eee', borderRadius: '10px', marginBottom: '20px' }}>
-        <button onClick={() => setShowModal(true)} style={{...commonStyle.button, position: 'absolute', bottom: '10px', right: '10px'}}>+ Προσθήκη</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2>{AVATARS[user]} {user}</h2>
+        <button onClick={() => setUser(null)} style={{...commonStyle.button, background: '#fee2e2', color: '#ef4444'}}>Έξοδος</button>
       </div>
 
-      <h3>Λίστα ({locations.length} σημεία):</h3>
-      {locations.map((loc) => (
-        <div key={loc.id} style={{ border: '1px solid #ddd', padding: '10px', marginBottom: '5px', borderRadius: '8px' }}>
-          <strong>{loc.type}</strong> - {loc.addedBy}
-          <p>{loc.comment}</p>
+      <div style={{ position: 'relative', height: '300px', borderRadius: '20px', overflow: 'hidden', border: '2px solid #e2e8f0', margin: '20px 0' }}>
+        <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d10000!2d26.0!3d38.3!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sel!2sgr!4v1600000000000" width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"></iframe>
+        <button onClick={() => setShowModal(true)} style={{...commonStyle.button, position: 'absolute', bottom: '20px', right: '20px', background: '#3b82f6', color: 'white', borderRadius: '50%', width: '65px', height: '65px', fontSize: '30px', zIndex: 10 }}>+</button>
+      </div>
+
+      <h3>Αποθηκευμένα Σημεία ({locations.length})</h3>
+      {locations.map((loc: any) => (
+        <div key={loc.id} style={{ background: 'white', padding: '15px', borderRadius: '12px', marginBottom: '10px', border: '1px solid #e2e8f0' }}>
+          <strong>{loc.type}</strong> - {loc.addedBy}<br />
+          <p style={{ margin: '5px 0', fontSize: '14px' }}>{loc.comment}</p>
+          <a href={loc.link} target="_blank" rel="noreferrer" style={{ fontSize: '12px', color: '#3b82f6' }}>Δες στον χάρτη</a>
         </div>
       ))}
 
       {showModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: 'white', padding: '20px', borderRadius: '10px', width: '80%' }}>
-            <input placeholder="Link" onChange={e => setPlaceLink(e.target.value)} style={commonStyle.input} />
-            <input placeholder="Σχόλιο" onChange={e => setPlaceComment(e.target.value)} style={commonStyle.input} />
-            <button onClick={saveLocation} style={{...commonStyle.button, background: '#3b82f6', color: 'white'}}>Αποθήκευση</button>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.85)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'white', padding: '20px', borderRadius: '15px', width: '90%', maxWidth: '400px' }}>
+            <h3>Νέα Τοποθεσία</h3>
+            <select value={placeType} onChange={e => setPlaceType(e.target.value)} style={commonStyle.input}>
+              <option>🏖️ Παραλία</option><option>🍴 Εστιατόριο</option><option>📌 Άλλο</option>
+            </select>
+            <input placeholder="Google Maps Link" value={placeLink} onChange={e => setPlaceLink(e.target.value)} style={commonStyle.input} />
+            <textarea placeholder="Σχόλια" value={placeComment} onChange={e => setPlaceComment(e.target.value)} style={{...commonStyle.input, height: '80px'}} />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button onClick={() => setShowModal(false)} style={{...commonStyle.button, flex: 1, background: '#ccc'}}>Άκυρο</button>
+              <button onClick={saveLocation} style={{...commonStyle.button, flex: 1, background: '#3b82f6', color: 'white'}}>Αποθήκευση</button>
+            </div>
           </div>
         </div>
       )}
