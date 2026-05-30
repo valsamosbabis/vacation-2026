@@ -12,8 +12,28 @@ const AVATARS: { [key: string]: string } = {
 
 // Styling
 const commonStyle = {
-  button: { padding: '12px', borderRadius: '12px', border: 'none', cursor: 'pointer', fontWeight: '600', transition: '0.3s', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' },
-  input: { width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', marginBottom: '10px', boxSizing: 'border-box' as 'border-box', fontSize: '14px' }
+  button: { 
+    padding: '12px', 
+    borderRadius: '12px', 
+    border: 'none', 
+    cursor: 'pointer', 
+    fontWeight: '600', 
+    transition: '0.3s', 
+    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+    backgroundColor: '#333333', // Εδώ ορίζεις το χρώμα του κουμπιού
+    color: '#ffffff'            // Εδώ το χρώμα του κειμένου στο κουμπί
+  },
+  input: { 
+    width: '100%', 
+    padding: '12px', 
+    borderRadius: '10px', 
+    border: '1px solid #e2e8f0', 
+    marginBottom: '10px', 
+    boxSizing: 'border-box' as 'border-box', 
+    fontSize: '14px',
+    backgroundColor: '#ffffff', // Φόντο input
+    color: '#000000'            // Χρώμα κειμένου μέσα στο input
+  }
 };
 
 export default function App() {
