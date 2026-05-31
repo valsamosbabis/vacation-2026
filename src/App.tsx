@@ -14,7 +14,10 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('map');
   const [locations, setLocations] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [cost, setCost] = useState('');
+  
+  // States για την φόρμα
+  const [type, setType] = useState('🏖️ Παραλία');
+  const [link, setLink] = useState('');
   const [comment, setComment] = useState('');
 
   useEffect(() => {
@@ -26,20 +29,20 @@ export default function App() {
   }, []);
 
   const saveItem = () => {
-    if (!cost || !comment) return;
+    if (!link || !comment) return;
     // @ts-ignore
-    push(ref(db, 'locations'), { addedBy: user, cost, comment, date: new Date().toLocaleDateString('el-GR') });
-    setCost(''); setComment(''); setShowModal(false);
+    push(ref(db, 'locations'), { addedBy: user, type, link, comment, date: new Date().toLocaleDateString('el-GR') });
+    setLink(''); setComment(''); setShowModal(false);
   };
 
   const deleteItem = (id: string) => { /* @ts-ignore */ remove(ref(db, `locations/${id}`)); };
 
   if (!user) return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', padding: '20px', fontFamily: 'sans-serif', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      <h1 style={{ color: '#2d3748', marginBottom: '40px' }}>🚢 ΧΙΟΣ 2026</h1>
+      <h1 style={{ color: '#2d3748', marginBottom: '40px', fontSize: '2.5rem' }}>🚢 ΧΙΟΣ 2026</h1>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', width: '100%', maxWidth: '350px' }}>
         {PAYERS.map(p => (
-          <button key={p} onClick={() => setUser(p)} style={{ padding: '20px', borderRadius: '16px', border: 'none', background: '#fff', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', fontWeight: '600', cursor: 'pointer' }}>
+          <button key={p} onClick={() => setUser(p)} style={{ padding: '20px', borderRadius: '16px', border: 'none', background: '#fff', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', color: '#4a5568' }}>
             {AVATARS[p]} {p}
           </button>
         ))}
@@ -48,46 +51,47 @@ export default function App() {
   );
 
   return (
-    <div style={{ maxWidth: '500px', margin: 'auto', padding: '15px', fontFamily: 'sans-serif' }}>
+    <div style={{ maxWidth: '500px', margin: 'auto', padding: '15px', fontFamily: 'sans-serif', color: '#2d3748' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2>{AVATARS[user]} {user}</h2>
-        <button onClick={() => setUser(null)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#feb2b2' }}>Έξοδος</button>
+        <h2 style={{ fontSize: '1.5rem' }}>{AVATARS[user]} {user}</h2>
+        <button onClick={() => setUser(null)} style={{ padding: '8px 15px', borderRadius: '8px', border: 'none', background: '#feb2b2', fontWeight: 'bold' }}>Έξοδος</button>
       </div>
 
       <div style={{ display: 'flex', gap: '5px', marginBottom: '20px' }}>
         {[{id: 'map', label: '📍 Χάρτης'}, {id: 'expenses', label: '💰 Έξοδα'}, {id: 'calendar', label: '📅 Πλάνο'}].map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: activeTab === tab.id ? '#3182ce' : '#cbd5e0', color: 'white' }}>{tab.label}</button>
+          <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: activeTab === tab.id ? '#3182ce' : '#cbd5e0', color: 'white', fontWeight: 'bold' }}>{tab.label}</button>
         ))}
       </div>
 
       {activeTab === 'map' && (
         <div>
-          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d196426.6579624534!2d25.8641972!3d38.3756288!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14a014e7a8e7e1f9%3A0x400bd2ceb9a0160!2sChios!5e0!3m2!1sen!2sgr!4v1620000000000" width="100%" height="300" style={{ border: 0, borderRadius: '15px' }}></iframe>
-          <button onClick={() => setShowModal(true)} style={{ width: '100%', marginTop: '15px', padding: '15px', background: '#48bb78', color: 'white', border: 'none', borderRadius: '12px', fontSize: '20px' }}>+</button>
+          <iframe src="https://maps.google.com/?cid=1244361639074959537&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQ" width="100%" height="300" style={{ border: '2px solid #3182ce', borderRadius: '15px' }}></iframe>
+          <button onClick={() => setShowModal(true)} style={{ width: '100%', marginTop: '15px', padding: '15px', background: '#48bb78', color: 'white', border: 'none', borderRadius: '12px', fontSize: '20px', fontWeight: 'bold' }}>+ Προσθήκη Σημείου</button>
         </div>
       )}
 
-      {activeTab === 'expenses' && locations.map(loc => (
-        <div key={loc.id} style={{ background: '#fff', padding: '15px', marginBottom: '10px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between' }}>
-          <span>{loc.addedBy}: <strong>{loc.cost}€</strong></span>
-          <button onClick={() => deleteItem(loc.id)} style={{ background: '#f56565', color: 'white', border: 'none', borderRadius: '4px' }}>X</button>
-        </div>
-      ))}
-
-      {activeTab === 'calendar' && locations.map(loc => (
-        <div key={loc.id} style={{ background: '#fff', padding: '15px', marginBottom: '10px', borderRadius: '8px' }}>
-          <strong>{loc.date}</strong> - {loc.comment}
+      {activeTab !== 'map' && locations.map(loc => (
+        <div key={loc.id} style={{ background: '#fff', padding: '15px', marginBottom: '10px', borderRadius: '10px', borderLeft: '5px solid #3182ce' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <strong>{loc.type}</strong>
+            <button onClick={() => deleteItem(loc.id)} style={{ background: '#f56565', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 8px' }}>X</button>
+          </div>
+          <p style={{ margin: '5px 0' }}>{loc.comment}</p>
+          <a href={loc.link} target="_blank" rel="noreferrer" style={{ fontSize: '0.9rem', color: '#3182ce' }}>Δες στον χάρτη</a>
         </div>
       ))}
 
       {showModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-          <div style={{ background: 'white', padding: '20px', borderRadius: '15px', width: '100%' }}>
-            <h3>Προσθήκη</h3>
-            <input type="number" placeholder="Κόστος (€)" onChange={e => setCost(e.target.value)} style={{ width: '100%', padding: '10px', marginBottom: '10px' }} />
-            <input placeholder="Σχόλιο" onChange={e => setComment(e.target.value)} style={{ width: '100%', padding: '10px', marginBottom: '10px' }} />
-            <button onClick={saveItem} style={{ width: '100%', padding: '15px', background: '#3182ce', color: 'white', border: 'none', borderRadius: '8px' }}>Αποθήκευση</button>
-            <button onClick={() => setShowModal(false)} style={{ width: '100%', marginTop: '10px', padding: '10px' }}>Άκυρο</button>
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+          <div style={{ background: 'white', padding: '25px', borderRadius: '15px', width: '100%' }}>
+            <h3>Προσθήκη Τοποθεσίας</h3>
+            <select value={type} onChange={e => setType(e.target.value)} style={{ width: '100%', padding: '10px', marginBottom: '10px' }}>
+              <option>🏖️ Παραλία</option><option>🍴 Εστιατόριο</option><option>📌 Άλλο</option>
+            </select>
+            <input placeholder="Google Maps Link" onChange={e => setLink(e.target.value)} style={{ width: '100%', padding: '10px', marginBottom: '10px' }} />
+            <textarea placeholder="Σχόλιο" onChange={e => setComment(e.target.value)} style={{ width: '100%', padding: '10px', marginBottom: '10px' }} />
+            <button onClick={saveItem} style={{ width: '100%', padding: '15px', background: '#3182ce', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold' }}>Αποθήκευση</button>
+            <button onClick={() => setShowModal(false)} style={{ width: '100%', marginTop: '10px', padding: '10px', border: 'none', background: 'transparent' }}>Άκυρο</button>
           </div>
         </div>
       )}
