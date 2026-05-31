@@ -6,11 +6,19 @@ const USERS = ["ΜΠΑΜΠΗΣ", "ΓΙΩΡΓΟΣ", "ΚΩΣΤΑΣ", "ΔΗΜΗΤΡ
 const CATS = ["Παραλία", "Εστιατόριο", "Άλλο"];
 
 const App = () => {
-  const [user, setUser] = useState<string | null>(localStorage.getItem('chios_user'));
+  const [user, setUser] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('MAP');
   const [expenses, setExpenses] = useState<any[]>([]);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState({ amount: '', desc: '', cat: 'Παραλία', link: '' });
+
+  // Έλεγχος χρήστη κατά την εκκίνηση
+  useEffect(() => {
+    const savedUser = localStorage.getItem('chios_user');
+    if (savedUser) setUser(savedUser);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -21,7 +29,15 @@ const App = () => {
     }
   }, [user]);
 
-  // ΟΘΟΝΗ LOGIN
+  const logout = () => {
+    localStorage.removeItem('chios_user');
+    setUser(null);
+  };
+
+  // LOADING STATE
+  if (loading) return <div style={{padding: '20px', textAlign: 'center'}}>Φόρτωση...</div>;
+
+  // LOGIN SCREEN
   if (!user) {
     return (
       <div style={{minHeight:'100vh', background:'#0f172a', padding:'20px', textAlign:'center', color:'white', fontFamily:'sans-serif', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}>
@@ -38,30 +54,33 @@ const App = () => {
     );
   }
 
-  // ΟΘΟΝΗ ΕΦΑΡΜΟΓΗΣ
+  // MAIN APP
   return (
     <div style={{minHeight:'100vh', background:'#f8fafc', paddingBottom:'80px', fontFamily:'sans-serif'}}>
+      <div style={{background:'#1e3a8a', color:'white', padding:'15px 20px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+        <span>Χρήστης: <strong>{user}</strong></span>
+        <button onClick={logout} style={{background:'transparent', border:'1px solid white', color:'white', padding:'5px 10px', borderRadius:'5px'}}>Exit</button>
+      </div>
+
       <div style={{padding:'20px'}}>
         {tab === 'MAP' && (
           <div>
             <h2 style={{textAlign:'center'}}>Χάρτης Χίου</h2>
             <div style={{height:'300px', background:'#bae6fd', borderRadius:'20px', display:'flex', alignItems:'center', justifyContent:'center', border:'2px dashed #0284c7'}}>Χάρτης (Κέντρο: Χίος)</div>
-            <button onClick={() => setModal(true)} style={{width:'100%', marginTop:'20px', padding:'15px', background:'#1e3a8a', color:'white', borderRadius:'15px', border:'none', fontSize:'18px'}}>+ Προσθήκη Εξόδου</button>
+            <button onClick={() => setModal(true)} style={{width:'100%', marginTop:'20px', padding:'15px', background:'#1e3a8a', color:'white', borderRadius:'15px', border:'none', fontSize:'18px'}}>+ Προσθήκη</button>
           </div>
         )}
-
         {tab === 'EXPENSES' && (
           <div>
             <h2 style={{textAlign:'center'}}>Έξοδα</h2>
             {expenses.map(e => (
-              <div key={e.id} style={{background:'white', padding:'15px', borderRadius:'12px', marginBottom:'10px', display:'flex', justifyContent:'space-between', alignItems:'center', boxShadow:'0 1px 2px rgba(0,0,0,0.1)'}}>
-                <div><strong>{e.desc}</strong><br/><small>{e.cat} - {e.amount}€ ({e.user})</small></div>
-                <button onClick={() => remove(ref(db, `expenses/${e.id}`))} style={{background:'#fee2e2', border:'none', padding:'8px 12px', borderRadius:'8px', cursor:'pointer'}}>✕</button>
+              <div key={e.id} style={{background:'white', padding:'15px', borderRadius:'12px', marginBottom:'10px', display:'flex', justifyContent:'space-between'}}>
+                <div><strong>{e.desc}</strong><br/><small>{e.cat} - {e.amount}€</small></div>
+                <button onClick={() => remove(ref(db, `expenses/${e.id}`))} style={{background:'#fee2e2', border:'none', padding:'5px 10px', borderRadius:'5px'}}>✕</button>
               </div>
             ))}
           </div>
         )}
-
         {tab === 'CALENDAR' && <div style={{textAlign:'center', marginTop:'50px'}}>Ημερολόγιο</div>}
       </div>
 
@@ -76,9 +95,8 @@ const App = () => {
           <form style={{background:'white', padding:'20px', borderRadius:'20px', width:'100%', maxWidth:'400px'}} onSubmit={(e)=>{e.preventDefault(); push(ref(db, 'expenses'), {...form, user, ts:Date.now()}); setModal(false);}}>
             <h3>Νέα Καταχώρηση</h3>
             <select onChange={e=>setForm({...form, cat:e.target.value})} style={{width:'100%', padding:'10px', marginBottom:'10px'}}>{CATS.map(c=><option key={c}>{c}</option>)}</select>
-            <input placeholder="Ποσό" onChange={e=>setForm({...form, amount:e.target.value})} style={{width:'100%', padding:'10px', marginBottom:'10px', boxSizing:'border-box'}} />
-            <input placeholder="Σχόλια" onChange={e=>setForm({...form, desc:e.target.value})} style={{width:'100%', padding:'10px', marginBottom:'10px', boxSizing:'border-box'}} />
-            <input placeholder="Link" onChange={e=>setForm({...form, link:e.target.value})} style={{width:'100%', padding:'10px', marginBottom:'10px', boxSizing:'border-box'}} />
+            <input placeholder="Ποσό" onChange={e=>setForm({...form, amount:e.target.value})} style={{width:'100%', padding:'10px', marginBottom:'10px'}} />
+            <input placeholder="Σχόλια" onChange={e=>setForm({...form, desc:e.target.value})} style={{width:'100%', padding:'10px', marginBottom:'10px'}} />
             <button type="submit" style={{width:'100%', padding:'15px', background:'#1e3a8a', color:'white', border:'none', borderRadius:'10px'}}>Αποθήκευση</button>
             <button type="button" onClick={()=>setModal(false)} style={{width:'100%', padding:'10px', marginTop:'10px', background:'none', border:'none', color:'red'}}>Άκυρο</button>
           </form>
