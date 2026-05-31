@@ -47,7 +47,7 @@ export default function App() {
 
   if (!user) return (
     <div style={{ textAlign: 'center', padding: '50px 20px', background: '#f1f5f9', minHeight: '100vh', fontFamily: 'system-ui' }}>
-      <h1>🚢 ΧΙΟΣ 2026</h1>
+      <h1>🚢 ΧΙΟΣ 2026 - UPDATE</h1>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', maxWidth: '400px', margin: 'auto' }}>
         {PAYERS.map(p => <button key={p} onClick={() => setUser(p)} style={{...commonStyle.button, background: '#fff'}}>{AVATARS[p]} {p}</button>)}
       </div>
@@ -62,7 +62,7 @@ export default function App() {
       </div>
 
       <div style={{ position: 'relative', height: '300px', borderRadius: '20px', overflow: 'hidden', border: '2px solid #e2e8f0', margin: '20px 0' }}>
-        <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d10000!2d26.0!3d38.3!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sel!2sgr!4v1600000000000" width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"></iframe>
+        <iframe src="https://www.google.com/maps/embed" width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy"></iframe>
         <button onClick={() => setShowModal(true)} style={{...commonStyle.button, position: 'absolute', bottom: '20px', right: '20px', background: '#3b82f6', color: 'white', borderRadius: '50%', width: '65px', height: '65px', fontSize: '30px', zIndex: 10 }}>+</button>
       </div>
 
