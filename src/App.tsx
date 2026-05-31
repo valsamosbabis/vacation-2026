@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
 // @ts-ignore
-import { ref, onValue } from 'firebase/database';
+import { ref, onValue, remove, push } from 'firebase/database';
 
 const PAYERS = ['ΓΙΩΡΓΟΣ', 'ΜΠΑΜΠΗΣ', 'ΚΩΣΤΑΣ', 'ΔΗΜΗΤΡΗΣ', 'ΦΩΦΗ', 'ΜΑΡΙΛΗ', 'ΛΙΤΣΑ', 'ΒΑΣΙΛΙΚΗ'];
 const AVATARS: { [key: string]: string } = {
@@ -16,29 +16,24 @@ export default function App() {
 
   useEffect(() => {
     // @ts-ignore
-    const locRef = ref(db, 'locations');
-    // @ts-ignore
-    onValue(locRef, (snapshot) => {
+    onValue(ref(db, 'locations'), (snapshot) => {
       const data = snapshot.val();
       setLocations(data ? Object.entries(data).map(([id, val]: any) => ({ id, ...val })) : []);
     });
   }, []);
 
+  const deleteItem = (id: string) => {
+    // @ts-ignore
+    remove(ref(db, `locations/${id}`));
+  };
+
   if (!user) return (
-    <div style={{ 
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
-      minHeight: '100vh', background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-      padding: '20px', fontFamily: '-apple-system, sans-serif'
-    }}>
-      <h1 style={{ color: '#2d3748', marginBottom: '40px', fontSize: '2rem' }}>🚢 Χίος 2026</h1>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', width: '100%', maxWidth: '350px' }}>
+    <div style={{ minHeight: '100vh', background: '#f0f2f5', padding: '20px', fontFamily: 'sans-serif' }}>
+      <h1 style={{ textAlign: 'center', color: '#1a202c' }}>🚢 ΧΙΟΣ 2026</h1>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', maxWidth: '400px', margin: 'auto' }}>
         {PAYERS.map(p => (
-          <button key={p} onClick={() => setUser(p)} style={{ 
-            padding: '20px 10px', borderRadius: '16px', border: 'none', background: '#fff', 
-            boxShadow: '0 4px 6px rgba(0,0,0,0.05)', fontWeight: '600', cursor: 'pointer',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px'
-          }}>
-            <span>{AVATARS[p]}</span>{p}
+          <button key={p} onClick={() => setUser(p)} style={{ padding: '15px', borderRadius: '12px', border: 'none', background: 'white', fontSize: '16px', color: '#2d3748', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+            {AVATARS[p]} {p}
           </button>
         ))}
       </div>
@@ -46,30 +41,55 @@ export default function App() {
   );
 
   return (
-    <div style={{ maxWidth: '500px', margin: 'auto', padding: '15px', fontFamily: 'system-ui' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div style={{ maxWidth: '500px', margin: 'auto', padding: '15px', fontFamily: 'sans-serif' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
         <h2>{AVATARS[user]} {user}</h2>
-        <button onClick={() => setUser(null)} style={{ padding: '8px 12px', borderRadius: '8px', border: 'none', background: '#e2e8f0' }}>Έξοδος</button>
+        <button onClick={() => setUser(null)} style={{ border: 'none', background: '#feb2b2', borderRadius: '8px', padding: '5px 10px' }}>Έξοδος</button>
       </div>
 
-      {/* Tabs Navigation */}
-      <div style={{ display: 'flex', gap: '5px', marginBottom: '20px', background: '#f1f5f9', padding: '5px', borderRadius: '12px' }}>
-        {['map', 'expenses', 'calendar'].map((tab) => (
-          <button key={tab} onClick={() => setActiveTab(tab)} style={{ 
-            flex: 1, padding: '10px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-            background: activeTab === tab ? '#3b82f6' : 'transparent', color: activeTab === tab ? 'white' : '#64748b'
-          }}>
-            {tab === 'map' ? '📍 Χάρτης' : tab === 'expenses' ? '💰 Έξοδα' : '📅 Ημερολόγιο'}
+      <div style={{ display: 'flex', gap: '5px', marginBottom: '20px' }}>
+        {['map', 'expenses', 'calendar'].map(tab => (
+          <button key={tab} onClick={() => setActiveTab(tab)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: activeTab === tab ? '#3182ce' : '#cbd5e0', color: 'white' }}>
+            {tab === 'map' ? '📍 Χάρτης' : tab === 'expenses' ? '💰 Έξοδα' : '📅 Πλάνο'}
           </button>
         ))}
       </div>
 
-      {/* Tab Content */}
-      <div style={{ minHeight: '300px' }}>
-        {activeTab === 'map' && <div><h3>Χάρτης</h3><p>Εδώ θα εμφανίζεται ο χάρτης με τα pins.</p></div>}
-        {activeTab === 'expenses' && <div><h3>Έξοδα</h3><p>Εδώ θα διαχειριζόμαστε τα έξοδα.</p></div>}
-        {activeTab === 'calendar' && <div><h3>Ημερολόγιο</h3><p>Εδώ θα είναι το πρόγραμμα.</p></div>}
-      </div>
+      {activeTab === 'map' && (
+        <div>
+          <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d196425.4616223253!2d25.8604!3d38.3724!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14a36f98a28e3575%3A0x400bd2ce2b98290!2zQ2hpb3MsIEdyZWVjZQ!5e0!3m2!1sen!2sgr!4v1620000000000" 
+            width="100%" height="300" style={{ border: 0, borderRadius: '15px' }} allowFullScreen></iframe>
+          {locations.map(loc => (
+            <div key={loc.id} style={{ background: 'white', padding: '10px', marginTop: '10px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between' }}>
+              <span>{loc.type} - {loc.addedBy}</span>
+              <button onClick={() => deleteItem(loc.id)} style={{ background: '#f56565', color: 'white', border: 'none', borderRadius: '4px' }}>X</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'expenses' && (
+        <div>
+          <h3>Σύνολο Εξόδων</h3>
+          {locations.map(loc => (
+            <div key={loc.id} style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+              {loc.addedBy}: {loc.cost || 0}€ ({loc.type})
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeTab === 'calendar' && (
+        <div>
+          <h3>Πρόγραμμα - Ημερολόγιο</h3>
+          {locations.map(loc => (
+            <div key={loc.id} style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
+              <strong>{loc.date}</strong>: {loc.comment}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
