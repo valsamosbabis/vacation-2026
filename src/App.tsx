@@ -1,18 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from './firebase';
-import { ref, push, onValue, remove, serverTimestamp } from 'firebase/database';
-import { 
-  Plus, 
-  Trash2, 
-  MapPin, 
-  Wallet, 
-  Calendar, 
-  User as UserIcon,
-  ChevronRight,
-  X
-} from 'lucide-react';
+import { ref, push, onValue, remove } from 'firebase/database';
 
-// --- Types ---
 interface Expense {
   id: string;
   amount: number;
@@ -22,56 +11,48 @@ interface Expense {
   timestamp: number;
 }
 
-const USERS = ["ΓΙΩΡΓΟΣ", "ΜΑΡΙΑ", "ΚΩΣΤΑΣ", "ΕΛΕΝΗ"];
+const USERS = ["ΜΠΑΜΠΗΣ", "ΓΙΩΡΓΟΣ", "ΚΩΣΤΑΣ", "ΔΗΜΗΤΡΗΣ", "ΜΑΡΙΛΗ", "ΦΩΦΗ", "ΛΙΤΣΑ", "ΒΑΣΙΛΙΚΗ"];
 
 const App = () => {
-  const [user, setUser] = useState<string | null>(localStorage.getItem('chios_user'));
+  const [activeUser, setActiveUser] = useState<string | null>(localStorage.getItem('chios_user'));
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [amount, setAmount] = useState('');
-  const [desc, setDesc] = useState('');
-  const [loc, setLoc] = useState('');
+  const [description, setDescription] = useState('');
+  const [location, setLocation] = useState('');
 
-  // --- Firebase Sync ---
   useEffect(() => {
     const expensesRef = ref(db, 'expenses');
     return onValue(expensesRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        const list = Object.entries(data).map(([id, val]: any) => ({
+        const loadedExpenses = Object.entries(data).map(([id, val]: any) => ({
           id,
           ...val,
         })).sort((a, b) => b.timestamp - a.timestamp);
-        setExpenses(list);
+        setExpenses(loadedExpenses);
       } else {
         setExpenses([]);
       }
     });
   }, []);
 
-  // --- Actions ---
-  const handleLogin = (name: string) => {
-    setUser(name);
+  const login = (name: string) => {
+    setActiveUser(name);
     localStorage.setItem('chios_user', name);
   };
 
-  const handleAddExpense = (e: React.FormEvent) => {
+  const submitExpense = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !desc) return;
-
-    const expensesRef = ref(db, 'expenses');
-    push(expensesRef, {
+    if (!amount || !description) return;
+    push(ref(db, 'expenses'), {
       amount: parseFloat(amount),
-      description: desc,
-      location: loc || "Γενικά",
-      user: user,
-      timestamp: Date.now() // Χρησιμοποιούμε τοπικό timestamp για άμεση εμφάνιση
+      description: description,
+      location: location || "Χίος",
+      user: activeUser,
+      timestamp: Date.now()
     });
-
-    setAmount('');
-    setDesc('');
-    setLoc('');
-    setIsModalOpen(false);
+    setAmount(''); setDescription(''); setLocation(''); setIsModalOpen(false);
   };
 
   const deleteExpense = (id: string) => {
@@ -80,164 +61,63 @@ const App = () => {
     }
   };
 
-  const totalAmount = expenses.reduce((acc, curr) => acc + curr.amount, 0);
+  const totalSpent = expenses.reduce((acc, curr) => acc + curr.amount, 0);
 
-  // --- Sub-Components ---
-  if (!user) {
+  if (!activeUser) {
     return (
-      <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center p-6 font-sans">
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 border border-slate-100">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-slate-800 tracking-tight">ΧΙΟΣ 2026</h1>
-            <p className="text-slate-500 mt-2">Shared Expense Tracker</p>
-          </div>
-          <div className="grid gap-4">
-            {USERS.map(name => (
-              <button
-                key={name}
-                onClick={() => handleLogin(name)}
-                className="flex items-center justify-between p-5 rounded-2xl bg-slate-50 hover:bg-blue-600 hover:text-white transition-all duration-300 group"
-              >
-                <span className="font-semibold text-lg">{name}</span>
-                <ChevronRight className="opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
-            ))}
-          </div>
+      <div style={{minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', padding: '20px', fontFamily: 'sans-serif'}}>
+        <h1 style={{color: '#1e3a8a', marginBottom: '30px', fontWeight: 'bold'}}>ΧΙΟΣ 2026</h1>
+        <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', maxWidth: '400px'}}>
+          {USERS.map(name => (
+            <button key={name} onClick={() => login(name)} style={{padding: '16px', background: 'white', border: '1px solid #cbd5e1', borderRadius: '14px', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px'}}>
+              {name}
+            </button>
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#f1f5f9] text-slate-900 font-sans pb-24">
-      {/* Header */}
-      <header className="bg-[#1e3a8a] text-white p-6 pt-12 rounded-b-[40px] shadow-lg sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto flex justify-between items-center">
-          <div>
-            <p className="text-blue-200 text-sm font-medium uppercase tracking-widest">Συνολικά Έξοδα</p>
-            <h2 className="text-4xl font-bold mt-1">€{totalAmount.toFixed(2)}</h2>
-          </div>
-          <div className="text-right">
-            <div className="flex items-center gap-2 bg-blue-800/50 px-4 py-2 rounded-full border border-blue-400/30">
-              <UserIcon size={18} />
-              <span className="font-medium">{user}</span>
-            </div>
-          </div>
+    <div style={{minHeight: '100vh', background: '#f8fafc', fontFamily: 'sans-serif', paddingBottom: '100px'}}>
+      <header style={{background: '#1e3a8a', color: 'white', padding: '40px 20px', borderRadius: '0 0 30px 30px', textAlign: 'center'}}>
+        <p style={{fontSize: '12px', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '1px'}}>Συνολικά Έξοδα</p>
+        <h2 style={{fontSize: '40px', fontWeight: 'bold', margin: '10px 0'}}>€{totalSpent.toFixed(2)}</h2>
+        <div style={{background: 'rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '20px', display: 'inline-block', fontSize: '13px'}}>
+          Χρήστης: {activeUser}
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto p-4 mt-4">
-        {/* Timeline List */}
-        <div className="space-y-4">
-          {expenses.length === 0 && (
-            <div className="text-center py-20 text-slate-400">
-              <Wallet size={48} className="mx-auto mb-4 opacity-20" />
-              <p>Δεν υπάρχουν εγγραφές ακόμα</p>
-            </div>
-          )}
-          
-          {expenses.map((exp) => (
-            <div key={exp.id} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex justify-between items-center group animate-in fade-in slide-in-from-bottom-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase">
-                    {exp.user}
-                  </span>
-                  <span className="text-xs text-slate-400 flex items-center gap-1">
-                    <Calendar size={12} />
-                    {new Date(exp.timestamp).toLocaleDateString('el-GR')}
-                  </span>
-                </div>
-                <h3 className="font-bold text-lg text-slate-800">{exp.description}</h3>
-                <p className="text-slate-500 text-sm flex items-center gap-1">
-                  <MapPin size={14} className="text-slate-400" />
-                  {exp.location}
-                </p>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <span className="text-xl font-black text-slate-900">
-                  €{exp.amount.toFixed(2)}
-                </span>
-                <button 
-                  onClick={() => deleteExpense(exp.id)}
-                  className="p-2 text-slate-300 hover:text-red-500 transition-colors"
-                >
-                  <Trash2 size={20} />
-                </button>
+      <main style={{padding: '20px', maxWidth: '500px', margin: '0 auto'}}>
+        {expenses.map((exp) => (
+          <div key={exp.id} style={{background: 'white', padding: '16px', borderRadius: '16px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)'}}>
+            <div>
+              <div style={{fontWeight: 'bold', fontSize: '16px'}}>{exp.description}</div>
+              <div style={{fontSize: '12px', color: '#64748b', marginTop: '4px'}}>
+                {exp.location} • {new Date(exp.timestamp).toLocaleDateString('el-GR')} • {exp.user}
               </div>
             </div>
-          ))}
-        </div>
+            <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
+              <span style={{fontWeight: '900', fontSize: '16px'}}>€{exp.amount.toFixed(2)}</span>
+              <button onClick={() => deleteExpense(exp.id)} style={{background: '#fee2e2', border: 'none', color: '#dc2626', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', fontSize: '16px'}}>✕</button>
+            </div>
+          </div>
+        ))}
       </main>
 
-      {/* Floating Action Button (FAB) */}
-      <button 
-        onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-8 right-8 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-20 border-4 border-white"
-      >
-        <Plus size={32} />
+      <button onClick={() => setIsModalOpen(true)} style={{position: 'fixed', bottom: '25px', right: '25px', width: '65px', height: '65px', borderRadius: '50%', background: '#1e3a8a', color: 'white', fontSize: '32px', border: 'none', boxShadow: '0 6px 20px rgba(30,58,138,0.4)', cursor: 'pointer'}}>
+        +
       </button>
 
-      {/* Add Expense Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-[32px] p-8 shadow-2xl animate-in slide-in-from-bottom-full duration-300">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold">Προσθήκη Εξόδου</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
-                <X />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddExpense} className="space-y-5">
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Ποσό (€)</label>
-                <input 
-                  type="number" 
-                  step="0.01"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="w-full bg-slate-50 border-none rounded-2xl p-4 text-2xl font-bold focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="0.00"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Τι αγοράσατε;</label>
-                <input 
-                  type="text" 
-                  value={desc}
-                  onChange={(e) => setDesc(e.target.value)}
-                  className="w-full bg-slate-50 border-none rounded-2xl p-4 outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="π.χ. Καφέδες, Ταβέρνα"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Τοποθεσία (Χάρτης)</label>
-                <div className="relative">
-                  <input 
-                    type="text" 
-                    value={loc}
-                    onChange={(e) => setLoc(e.target.value)}
-                    className="w-full bg-slate-50 border-none rounded-2xl p-4 pl-12 outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="π.χ. Μεστά, Μαύρα Βόλια"
-                  />
-                  <MapPin className="absolute left-4 top-4 text-blue-500" />
-                </div>
-              </div>
-
-              <button 
-                type="submit"
-                className="w-full bg-[#1e3a8a] text-white font-bold py-5 rounded-2xl shadow-lg hover:bg-blue-700 transition-colors text-lg"
-              >
-                ΚΑΤΑΧΩΡΗΣΗ
-              </button>
-            </form>
-          </div>
+        <div style={{position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'flex-end', zIndex: 100}}>
+          <form onSubmit={submitExpense} style={{background: 'white', width: '100%', padding: '30px', borderRadius: '30px 30px 0 0', boxSizing: 'border-box'}}>
+            <h3 style={{marginTop: 0, marginBottom: '20px', fontSize: '20px'}}>Νέα Καταχώρηση</h3>
+            <input type="number" step="0.01" placeholder="Ποσό (€)" value={amount} onChange={e => setAmount(e.target.value)} required style={{width: '100%', padding: '16px', marginBottom: '12px', borderRadius: '14px', border: '1px solid #e2e8f0', boxSizing: 'border-box', fontSize: '16px'}} />
+            <input type="text" placeholder="Περιγραφή" value={description} onChange={e => setDescription(e.target.value)} required style={{width: '100%', padding: '16px', marginBottom: '12px', borderRadius: '14px', border: '1px solid #e2e8f0', boxSizing: 'border-box', fontSize: '16px'}} />
+            <input type="text" placeholder="Τοποθεσία" value={location} onChange={e => setLocation(e.target.value)} style={{width: '100%', padding: '16px', marginBottom: '25px', borderRadius: '14px', border: '1px solid #e2e8f0', boxSizing: 'border-box', fontSize: '16px'}} />
+            <button type="submit" style={{width: '100%', padding: '18px', background: '#1e3a8a', color: 'white', borderRadius: '14px', border: 'none', fontWeight: 'bold', fontSize: '16px'}}>ΑΠΟΘΗΚΕΥΣΗ</button>
+          </form>
         </div>
       )}
     </div>
