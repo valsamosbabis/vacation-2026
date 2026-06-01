@@ -3,8 +3,8 @@ import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import { db } from './firebase';
 import { ref, push, onValue, remove } from 'firebase/database';
 
-// ΒΑΛΕ ΕΔΩ ΤΟ API KEY ΣΟΥ
-const GOOGLE_API_KEY = "YOUR_GOOGLE_MAPS_API_KEY_HERE";
+// ⚠️ Βάλε το API Key σου εδώ
+const GOOGLE_API_KEY = AIzaSyCGAr0Lr3l0MuNqrCm0mkhX8BBjpnD2Sio;
 
 const USERS = ["ΜΠΑΜΠΗΣ", "ΓΙΩΡΓΟΣ", "ΚΩΣΤΑΣ", "ΔΗΜΗΤΡΗΣ", "ΜΑΡΙΛΗ", "ΦΩΦΗ", "ΛΙΤΣΑ", "ΒΑΣΙΛΙΚΗ"];
 const MAP_CATS = ["Παραλία", "Εστιατόριο", "Άλλο"];
@@ -54,9 +54,7 @@ const App = () => {
         
         {isLoaded ? (
           <GoogleMap mapContainerStyle={{width:'100%', height:'400px', borderRadius:'12px'}} center={{lat: 38.37, lng: 26.00}} zoom={11}>
-            {mapItems.map(m => (
-                <Marker key={m.id} position={{lat: parseFloat(m.lat), lng: parseFloat(m.lng)}} />
-            ))}
+            {mapItems.map(m => <Marker key={m.id} position={{lat: parseFloat(m.lat), lng: parseFloat(m.lng)}} label={m.cat[0]} />)}
           </GoogleMap>
         ) : <p>Φόρτωση χάρτη...</p>}
 
