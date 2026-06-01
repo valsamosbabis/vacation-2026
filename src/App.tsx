@@ -48,93 +48,8 @@ const App = () => {
   );
 };
 
-// --- ΣΕΛΙΔΑ ΕΞΟΔΑ (k13 logic) ---
-const ExpensesView = ({ currentUser }: { currentUser: string }) => {
-  const [expenses, setExpenses] = useState<any[]>([]);
-  const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ amount: '', desc: '' });
-
-  useEffect(() => {
-    onValue(ref(db, 'expenses'), (s) => {
-      const d = s.val();
-      setExpenses(d ? Object.entries(d).map(([id, v]: any) => ({ id, ...v })) : []);
-    });
-  }, []);
-
-  // Υπολογισμοί
-  const total = expenses.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
-  
-  // Weights
-  const weights: Record<string, number> = { "ΓΙΩΡΓΟΣ": 3, "ΔΗΜΗΤΡΗΣ": 4, "ΜΠΑΜΠΗΣ": 4, "ΚΩΣΤΑΣ": 4 };
-  const totalWeight = 15;
-
-  const paidBy = { "ΓΙΩΡΓΟΣ": 0, "ΔΗΜΗΤΡΗΣ": 0, "ΜΠΑΜΠΗΣ": 0, "ΚΩΣΤΑΣ": 0 };
-  expenses.forEach(e => {
-    if (paidBy.hasOwnProperty(e.paidBy)) paidBy[e.paidBy] += parseFloat(e.amount);
-  });
-
-  const balances: Record<string, number> = {};
-  Object.keys(weights).forEach(p => {
-    const fairShare = (weights[p] / totalWeight) * total;
-    balances[p] = paidBy[p] - fairShare;
-  });
-
-  // Απλό settlement logic
-  const debtors = Object.entries(balances).filter(([_, bal]) => bal < -0.01);
-  const creditors = Object.entries(balances).filter(([_, bal]) => bal > 0.01);
-
-  return (
-    <div>
-      <div style={{background:'#fff', padding:'15px', borderRadius:'12px', marginBottom:'20px', border:'1px solid #e2e8f0'}}>
-        <h4 style={{margin:'0 0 10px'}}>Ποιος χρωστάει σε ποιον;</h4>
-        <div style={{fontSize:'14px'}}>
-          {debtors.length === 0 && creditors.length === 0 ? <p>Όλοι είναι "τακτοποιημένοι"!</p> :
-            debtors.map(([name, bal]) => (
-                <div key={name} style={{padding:'5px 0', borderBottom:'1px solid #f8fafc'}}>
-                    <strong>{name}</strong> χρωστάει συνολικά <strong>{Math.abs(bal).toFixed(2)}€</strong>
-                </div>
-            ))
-          }
-        </div>
-      </div>
-
-      {ADMINS.includes(currentUser) && (
-        <button onClick={() => setModal(true)} style={{width:'100%', padding:'12px', background:'#22c55e', color:'white', border:'none', borderRadius:'8px', marginBottom:'20px', fontWeight:'bold'}}>+ Προσθήκη Εξόδου</button>
-      )}
-
-      {expenses.map(e => (
-        <div key={e.id} style={{background:'white', padding:'15px', borderRadius:'10px', marginBottom:'10px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-          <div>
-            <div style={{fontWeight:'bold'}}>{e.desc}</div>
-            <div style={{fontSize:'12px', color:'#64748b'}}>{e.date} • Πλήρωσε: {e.paidBy}</div>
-          </div>
-          <div style={{display:'flex', alignItems:'center', gap:'15px'}}>
-            <span style={{fontWeight:'bold'}}>{e.amount}€</span>
-            {ADMINS.includes(currentUser) && <button onClick={() => remove(ref(db, 'expenses/' + e.id))} style={{border:'none', background:'none', color:'red', cursor:'pointer'}}>x</button>}
-          </div>
-        </div>
-      ))}
-      
-      {modal && ( /* modal logic remains same */
-        <div style={{position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px', zIndex:100}}>
-          <form style={{background:'white', padding:'20px', borderRadius:'10px', width:'100%', maxWidth:'400px'}} onSubmit={(e) => {
-            e.preventDefault();
-            push(ref(db, 'expenses'), { ...form, date: new Date().toLocaleDateString(), paidBy: currentUser });
-            setModal(false); setForm({amount:'', desc:''});
-          }}>
-            <h3>Προσθήκη Εξόδου</h3>
-            <input type="number" required placeholder="Ποσό (€)" value={form.amount} onChange={e => setForm({...form, amount: e.target.value})} style={{width:'100%', padding:'10px', marginBottom:'10px', boxSizing:'border-box'}} />
-            <input required placeholder="Περιγραφή" value={form.desc} onChange={e => setForm({...form, desc: e.target.value})} style={{width:'100%', padding:'10px', marginBottom:'10px', boxSizing:'border-box'}} />
-            <button type="submit" style={{width:'100%', padding:'10px', background:'#4f46e5', color:'white', border:'none', borderRadius:'8px'}}>Καταχώρηση</button>
-          </form>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// ... SightsView και CalendarView παραμένουν ίδια ...
-const SightsView = ({ currentUser }: { currentUser: string }) => { /* code remains identical */ 
+// --- ΣΕΛΙΔΑ ΑΞΙΟΘΕΑΤΑ ---
+const SightsView = ({ currentUser }: { currentUser: string }) => {
   const [subTab, setSubTab] = useState('Παραλίες');
   const [modal, setModal] = useState(false);
   const [items, setItems] = useState<any[]>([]);
@@ -181,6 +96,92 @@ const SightsView = ({ currentUser }: { currentUser: string }) => { /* code remai
   );
 };
 
+// --- ΣΕΛΙΔΑ ΕΞΟΔΑ (Fixed TypeScript) ---
+const ExpensesView = ({ currentUser }: { currentUser: string }) => {
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [modal, setModal] = useState(false);
+  const [form, setForm] = useState({ amount: '', desc: '' });
+
+  useEffect(() => {
+    onValue(ref(db, 'expenses'), (s) => {
+      const d = s.val();
+      setExpenses(d ? Object.entries(d).map(([id, v]: any) => ({ id, ...v })) : []);
+    });
+  }, []);
+
+  const total = expenses.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
+  
+  // Διόρθωση TS με Record
+  const weights: Record<string, number> = { "ΓΙΩΡΓΟΣ": 3, "ΔΗΜΗΤΡΗΣ": 4, "ΜΠΑΜΠΗΣ": 4, "ΚΩΣΤΑΣ": 4 };
+  const totalWeight = 15;
+
+  const paidBy: Record<string, number> = { "ΓΙΩΡΓΟΣ": 0, "ΔΗΜΗΤΡΗΣ": 0, "ΜΠΑΜΠΗΣ": 0, "ΚΩΣΤΑΣ": 0 };
+  
+  expenses.forEach(e => {
+    if (Object.keys(paidBy).includes(e.paidBy)) {
+      paidBy[e.paidBy] += parseFloat(e.amount);
+    }
+  });
+
+  const balances: Record<string, number> = {};
+  Object.keys(weights).forEach(p => {
+    const fairShare = (weights[p] / totalWeight) * total;
+    balances[p] = paidBy[p] - fairShare;
+  });
+
+  const debtors = Object.entries(balances).filter(([_, bal]) => bal < -0.01);
+
+  return (
+    <div>
+      <div style={{background:'#fff', padding:'15px', borderRadius:'12px', marginBottom:'20px', border:'1px solid #e2e8f0'}}>
+        <h4 style={{margin:'0 0 10px'}}>Ποιος χρωστάει σε ποιον;</h4>
+        <div style={{fontSize:'14px'}}>
+          {debtors.length === 0 ? <p>Όλοι είναι "τακτοποιημένοι"!</p> :
+            debtors.map(([name, bal]) => (
+                <div key={name} style={{padding:'5px 0', borderBottom:'1px solid #f8fafc'}}>
+                    <strong>{name}</strong> χρωστάει συνολικά <strong>{Math.abs(bal).toFixed(2)}€</strong>
+                </div>
+            ))
+          }
+        </div>
+      </div>
+
+      {ADMINS.includes(currentUser) && (
+        <button onClick={() => setModal(true)} style={{width:'100%', padding:'12px', background:'#22c55e', color:'white', border:'none', borderRadius:'8px', marginBottom:'20px', fontWeight:'bold'}}>+ Προσθήκη Εξόδου</button>
+      )}
+
+      {expenses.map(e => (
+        <div key={e.id} style={{background:'white', padding:'15px', borderRadius:'10px', marginBottom:'10px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+          <div>
+            <div style={{fontWeight:'bold'}}>{e.desc}</div>
+            <div style={{fontSize:'12px', color:'#64748b'}}>{e.date} • Πλήρωσε: {e.paidBy}</div>
+          </div>
+          <div style={{display:'flex', alignItems:'center', gap:'15px'}}>
+            <span style={{fontWeight:'bold'}}>{e.amount}€</span>
+            {ADMINS.includes(currentUser) && <button onClick={() => remove(ref(db, 'expenses/' + e.id))} style={{border:'none', background:'none', color:'red', cursor:'pointer'}}>x</button>}
+          </div>
+        </div>
+      ))}
+      
+      {modal && (
+        <div style={{position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', padding:'20px', zIndex:100}}>
+          <form style={{background:'white', padding:'20px', borderRadius:'10px', width:'100%', maxWidth:'400px'}} onSubmit={(e) => {
+            e.preventDefault();
+            push(ref(db, 'expenses'), { ...form, date: new Date().toLocaleDateString(), paidBy: currentUser });
+            setModal(false); setForm({amount:'', desc:''});
+          }}>
+            <h3>Προσθήκη Εξόδου</h3>
+            <input type="number" required placeholder="Ποσό (€)" value={form.amount} onChange={e => setForm({...form, amount: e.target.value})} style={{width:'100%', padding:'10px', marginBottom:'10px', boxSizing:'border-box'}} />
+            <input required placeholder="Περιγραφή" value={form.desc} onChange={e => setForm({...form, desc: e.target.value})} style={{width:'100%', padding:'10px', marginBottom:'10px', boxSizing:'border-box'}} />
+            <button type="submit" style={{width:'100%', padding:'10px', background:'#4f46e5', color:'white', border:'none', borderRadius:'8px'}}>Καταχώρηση</button>
+          </form>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- ΣΕΛΙΔΑ ΗΜΕΡΟΛΟΓΙΟ ---
 const CalendarView = ({ currentUser }: { currentUser: string }) => {
     const [entries, setEntries] = useState<any[]>([]);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
