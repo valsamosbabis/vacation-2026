@@ -96,7 +96,7 @@ const SightsView = ({ currentUser }: { currentUser: string }) => {
   );
 };
 
-// --- ΣΕΛΙΔΑ ΕΞΟΔΑ (Fixed TypeScript) ---
+// --- ΣΕΛΙΔΑ ΕΞΟΔΑ ---
 const ExpensesView = ({ currentUser }: { currentUser: string }) => {
   const [expenses, setExpenses] = useState<any[]>([]);
   const [modal, setModal] = useState(false);
@@ -111,10 +111,8 @@ const ExpensesView = ({ currentUser }: { currentUser: string }) => {
 
   const total = expenses.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
   
-  // Διόρθωση TS με Record
   const weights: Record<string, number> = { "ΓΙΩΡΓΟΣ": 3, "ΔΗΜΗΤΡΗΣ": 4, "ΜΠΑΜΠΗΣ": 4, "ΚΩΣΤΑΣ": 4 };
   const totalWeight = 15;
-
   const paidBy: Record<string, number> = { "ΓΙΩΡΓΟΣ": 0, "ΔΗΜΗΤΡΗΣ": 0, "ΜΠΑΜΠΗΣ": 0, "ΚΩΣΤΑΣ": 0 };
   
   expenses.forEach(e => {
@@ -125,21 +123,32 @@ const ExpensesView = ({ currentUser }: { currentUser: string }) => {
 
   const balances: Record<string, number> = {};
   Object.keys(weights).forEach(p => {
-    const fairShare = (weights[p] / totalWeight) * total;
-    balances[p] = paidBy[p] - fairShare;
+    balances[p] = paidBy[p] - (weights[p] / totalWeight) * total;
   });
 
-  const debtors = Object.entries(balances).filter(([_, bal]) => bal < -0.01);
+  const settlements: { from: string, to: string, amount: number }[] = [];
+  const debtors = Object.entries(balances).filter(([_, bal]) => bal < -0.01).map(([n, b]) => ({ name: n, val: Math.abs(b) }));
+  const creditors = Object.entries(balances).filter(([_, bal]) => bal > 0.01).map(([n, b]) => ({ name: n, val: b }));
+
+  let i = 0, j = 0;
+  while (i < debtors.length && j < creditors.length) {
+    const amount = Math.min(debtors[i].val, creditors[j].val);
+    settlements.push({ from: debtors[i].name, to: creditors[j].name, amount });
+    debtors[i].val -= amount;
+    creditors[j].val -= amount;
+    if (debtors[i].val < 0.01) i++;
+    if (creditors[j].val < 0.01) j++;
+  }
 
   return (
     <div>
       <div style={{background:'#fff', padding:'15px', borderRadius:'12px', marginBottom:'20px', border:'1px solid #e2e8f0'}}>
         <h4 style={{margin:'0 0 10px'}}>Ποιος χρωστάει σε ποιον;</h4>
         <div style={{fontSize:'14px'}}>
-          {debtors.length === 0 ? <p>Όλοι είναι "τακτοποιημένοι"!</p> :
-            debtors.map(([name, bal]) => (
-                <div key={name} style={{padding:'5px 0', borderBottom:'1px solid #f8fafc'}}>
-                    <strong>{name}</strong> χρωστάει συνολικά <strong>{Math.abs(bal).toFixed(2)}€</strong>
+          {settlements.length === 0 ? <p>Όλοι είναι "τακτοποιημένοι"!</p> :
+            settlements.map((s, idx) => (
+                <div key={idx} style={{padding:'5px 0', borderBottom:'1px solid #f8fafc'}}>
+                    <strong>{s.from}</strong> χρωστάει <strong>{s.amount.toFixed(2)}€</strong> στον <strong>{s.to}</strong>
                 </div>
             ))
           }
