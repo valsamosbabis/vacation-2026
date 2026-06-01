@@ -6,6 +6,12 @@ const USERS = ["ΜΠΑΜΠΗΣ", "ΓΙΩΡΓΟΣ", "ΚΩΣΤΑΣ", "ΔΗΜΗΤΡ
 const ADMINS = ["ΔΗΜΗΤΡΗΣ", "ΓΙΩΡΓΟΣ", "ΜΠΑΜΠΗΣ", "ΚΩΣΤΑΣ"];
 const DATES = ["10/08", "11/08", "12/08", "13/08", "14/08", "15/08", "16/08", "17/08", "18/08", "19/08", "20/08", "21/08"];
 
+// Μόνο οι 4 συμμετέχουν στα βάρη
+const weights: Record<string, number> = { 
+  "ΓΙΩΡΓΟΣ": 3, "ΔΗΜΗΤΡΗΣ": 4, "ΜΠΑΜΠΗΣ": 4, "ΚΩΣΤΑΣ": 4 
+};
+const totalWeight = 15;
+
 const App = () => {
   const [user, setUser] = useState<string | null>(localStorage.getItem('chios_user'));
   const [activeTab, setActiveTab] = useState('Αξιοθέατα');
@@ -48,7 +54,6 @@ const App = () => {
   );
 };
 
-// --- ΣΕΛΙΔΑ ΑΞΙΟΘΕΑΤΑ ---
 const SightsView = ({ currentUser }: { currentUser: string }) => {
   const [subTab, setSubTab] = useState('Παραλίες');
   const [modal, setModal] = useState(false);
@@ -96,7 +101,6 @@ const SightsView = ({ currentUser }: { currentUser: string }) => {
   );
 };
 
-// --- ΣΕΛΙΔΑ ΕΞΟΔΑ ---
 const ExpensesView = ({ currentUser }: { currentUser: string }) => {
   const [expenses, setExpenses] = useState<any[]>([]);
   const [modal, setModal] = useState(false);
@@ -111,23 +115,23 @@ const ExpensesView = ({ currentUser }: { currentUser: string }) => {
 
   const total = expenses.reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
   
-  const weights: Record<string, number> = { "ΓΙΩΡΓΟΣ": 3, "ΔΗΜΗΤΡΗΣ": 4, "ΜΠΑΜΠΗΣ": 4, "ΚΩΣΤΑΣ": 4 };
-  const totalWeight = 15;
-  const paidBy: Record<string, number> = { "ΓΙΩΡΓΟΣ": 0, "ΔΗΜΗΤΡΗΣ": 0, "ΜΠΑΜΠΗΣ": 0, "ΚΩΣΤΑΣ": 0 };
-  
+  // Ποιος πλήρωσε τι
+  const paidBy: Record<string, number> = {};
   expenses.forEach(e => {
-    if (paidBy.hasOwnProperty(e.paidBy)) {
-      paidBy[e.paidBy] += parseFloat(e.amount);
-    }
+    paidBy[e.paidBy] = (paidBy[e.paidBy] || 0) + parseFloat(e.amount);
   });
 
+  // Υπολογισμός ισοζυγίου
+  const allInvolvedUsers = Array.from(new Set([...USERS, ...Object.keys(paidBy)]));
   const balances: Record<string, number> = {};
-  Object.keys(weights).forEach(p => {
-    const fairShare = (weights[p] / totalWeight) * total;
-    balances[p] = paidBy[p] - fairShare;
+  
+  allInvolvedUsers.forEach(u => {
+    const paid = paidBy[u] || 0;
+    const share = (weights[u] || 0) / totalWeight * total;
+    balances[u] = paid - share;
   });
 
-  // Settlement logic
+  // Settlement
   const settlements: { from: string, to: string, amount: number }[] = [];
   const debtors = Object.entries(balances).filter(([_, bal]) => bal < -0.01).map(([n, b]) => ({ name: n, val: Math.abs(b) }));
   const creditors = Object.entries(balances).filter(([_, bal]) => bal > 0.01).map(([n, b]) => ({ name: n, val: b }));
@@ -192,7 +196,6 @@ const ExpensesView = ({ currentUser }: { currentUser: string }) => {
   );
 };
 
-// --- ΣΕΛΙΔΑ ΗΜΕΡΟΛΟΓΙΟ ---
 const CalendarView = ({ currentUser }: { currentUser: string }) => {
     const [entries, setEntries] = useState<any[]>([]);
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
