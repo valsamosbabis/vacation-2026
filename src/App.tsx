@@ -17,15 +17,28 @@ const App = () => {
 
   if (!user) {
     return (
-      <div style={{minHeight:'100vh', background:'#f8fafc', padding:'40px 20px', fontFamily:'sans-serif', textAlign:'center'}}>
-        <h1 style={{fontSize:'2.5rem', marginBottom:'40px', color:'#1e293b'}}>ΧΙΟΣ 2026 (κ15)</h1>
-        <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'20px', maxWidth:'500px', margin:'0 auto'}}>
-          {USERS.map(u => (
-            <button key={u} onClick={() => {localStorage.setItem('chios_user', u); setUser(u);}} 
-              style={{padding:'20px', borderRadius:'15px', border:'none', background:'#fff', boxShadow:'0 4px 6px rgba(0,0,0,0.1)', cursor:'pointer', fontWeight:'bold', fontSize:'16px', color:'#334155'}}>
-              {u}
-            </button>
-          ))}
+      <div style={{
+        minHeight:'100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        padding:'20px', 
+        fontFamily:'sans-serif', 
+        textAlign:'center',
+        backgroundImage: 'linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(https://images.unsplash.com/photo-1598439210622-6803387d903e?q=80&w=2070&auto=format&fit=crop)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }}>
+        <div style={{background:'rgba(255,255,255,0.95)', padding:'30px', borderRadius:'20px', maxWidth:'500px', width:'100%'}}>
+          <h1 style={{fontSize:'2.5rem', marginBottom:'30px', color:'#1e293b'}}>ΧΙΟΣ 2026 (κ16)</h1>
+          <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'15px'}}>
+            {USERS.map(u => (
+              <button key={u} onClick={() => {localStorage.setItem('chios_user', u); setUser(u);}} 
+                style={{padding:'15px', borderRadius:'10px', border:'none', background:'#4f46e5', color:'white', cursor:'pointer', fontWeight:'bold', fontSize:'14px'}}>
+                {u}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     );
