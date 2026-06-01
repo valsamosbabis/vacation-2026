@@ -4,7 +4,7 @@ import { db } from './firebase';
 import { ref, push, onValue, remove } from 'firebase/database';
 
 // ⚠️ Βάλε το API Key σου εδώ
-const GOOGLE_API_KEY = AIzaSyCGAr0Lr3l0MuNqrCm0mkhX8BBjpnD2Sio;
+const GOOGLE_API_KEY = "AIzaSyCGAr0Lr3l0MuNqrCm0mkhX8BBjpnD2Sio";
 
 const USERS = ["ΜΠΑΜΠΗΣ", "ΓΙΩΡΓΟΣ", "ΚΩΣΤΑΣ", "ΔΗΜΗΤΡΗΣ", "ΜΑΡΙΛΗ", "ΦΩΦΗ", "ΛΙΤΣΑ", "ΒΑΣΙΛΙΚΗ"];
 const MAP_CATS = ["Παραλία", "Εστιατόριο", "Άλλο"];
