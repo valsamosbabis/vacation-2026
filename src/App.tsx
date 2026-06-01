@@ -13,7 +13,7 @@ const App = () => {
   if (!user) {
     return (
       <div style={{minHeight:'100vh', background:'#f8fafc', padding:'40px 20px', fontFamily:'sans-serif', textAlign:'center'}}>
-        <h1 style={{fontSize:'2.5rem', marginBottom:'40px', color:'#1e293b'}}>ΧΙΟΣ 2026</h1>
+        <h1 style={{fontSize:'2.5rem', marginBottom:'40px', color:'#1e293b'}}>ΧΙΟΣ 2026 (κ14)</h1>
         <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'20px', maxWidth:'500px', margin:'0 auto'}}>
           {USERS.map(u => (
             <button key={u} onClick={() => {localStorage.setItem('chios_user', u); setUser(u);}} 
@@ -116,16 +116,18 @@ const ExpensesView = ({ currentUser }: { currentUser: string }) => {
   const paidBy: Record<string, number> = { "ΓΙΩΡΓΟΣ": 0, "ΔΗΜΗΤΡΗΣ": 0, "ΜΠΑΜΠΗΣ": 0, "ΚΩΣΤΑΣ": 0 };
   
   expenses.forEach(e => {
-    if (Object.keys(paidBy).includes(e.paidBy)) {
+    if (paidBy.hasOwnProperty(e.paidBy)) {
       paidBy[e.paidBy] += parseFloat(e.amount);
     }
   });
 
   const balances: Record<string, number> = {};
   Object.keys(weights).forEach(p => {
-    balances[p] = paidBy[p] - (weights[p] / totalWeight) * total;
+    const fairShare = (weights[p] / totalWeight) * total;
+    balances[p] = paidBy[p] - fairShare;
   });
 
+  // Settlement logic
   const settlements: { from: string, to: string, amount: number }[] = [];
   const debtors = Object.entries(balances).filter(([_, bal]) => bal < -0.01).map(([n, b]) => ({ name: n, val: Math.abs(b) }));
   const creditors = Object.entries(balances).filter(([_, bal]) => bal > 0.01).map(([n, b]) => ({ name: n, val: b }));
@@ -143,7 +145,7 @@ const ExpensesView = ({ currentUser }: { currentUser: string }) => {
   return (
     <div>
       <div style={{background:'#fff', padding:'15px', borderRadius:'12px', marginBottom:'20px', border:'1px solid #e2e8f0'}}>
-        <h4 style={{margin:'0 0 10px'}}>Ποιος χρωστάει σε ποιον;</h4>
+        <h4 style={{margin:'0 0 10px'}}>Πλάνο Εξόφλησης</h4>
         <div style={{fontSize:'14px'}}>
           {settlements.length === 0 ? <p>Όλοι είναι "τακτοποιημένοι"!</p> :
             settlements.map((s, idx) => (
